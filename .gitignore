@@ -129,5 +129,6 @@ dmypy.json
 .pyre/
 
 # -- project-specific --
+/.idea/
 # problem instances data
 /lab01/data/

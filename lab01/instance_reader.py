@@ -4,7 +4,6 @@ import numpy as np
 
 
 # helper functions
-
 def _get_distance(n1, n2):
     return sqrt(
         (n1[0] - n2[0]) * (n1[0] - n2[0]) +
@@ -13,26 +12,34 @@ def _get_distance(n1, n2):
 
 
 class InstanceReader:
-    def __init__(self, filename, size=100):
+    def __init__(self, filename):
         self.filename: str = filename
-        self.nodes = []
-        self.size = size
-        self.matrix = np.ndarray(shape=(size, size), dtype=int)
+        self.size: int = 0
+        self.points = None
+        self.matrix = None
 
-        self.read_nodes()
+        self._read_nodes()
+        self._get_matrix()
 
-    def read_nodes(self):
+    def _read_nodes(self):
         DESC_LINES = 6  # Number of description lines in file that we ignore
+        points = []
 
         with open(self.filename, 'r') as f:
             for _ in range(DESC_LINES):
-                f.readline()
-            while (l := f.readline()) != "EOF\n":
-                self.nodes.append(tuple([int(x) for x in l.split(" ")[-2:]]))
+                l = f.readline().split(" ")
+                if l[0] == "DIMENSION:":
+                    self.size = int(l[1])
 
-    def get_matrix(self) -> np.ndarray:
-        for i in range(len(self.nodes)):
-            for j in range(len(self.nodes)):
-                self.matrix[i, j] = _get_distance(self.nodes[i], self.nodes[j]) + .5
+            while (l := f.readline()) != "EOF\n":
+                points.append([int(x) for x in l.split(" ")[-2:]])
+            self.points = np.array(points)
+
+        self.matrix = np.ndarray(shape=(self.size, self.size), dtype=int)
+
+    def _get_matrix(self) -> np.ndarray:
+        for i in range(len(self.points)):
+            for j in range(len(self.points)):
+                self.matrix[i, j] = _get_distance(self.points[i], self.points[j]) + .5
 
         return self.matrix

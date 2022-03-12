@@ -2,8 +2,8 @@ import random
 
 import numpy as np
 
-from algorithm import Algorithm
-from solution import Solution
+from lab01.algorithms.algorithm import Algorithm
+from lab01.solution import Solution
 
 
 class RandomAlgorithm(Algorithm):

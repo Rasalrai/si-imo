@@ -10,5 +10,5 @@ class Algorithm(ABC):
         # super().__init__()
 
     @abstractmethod
-    def run(self):
+    def run(self, *args, **kwargs):
         raise NotImplementedError("Subclass must implement abstract method")

@@ -39,7 +39,8 @@ class InstanceReader:
 
     def _get_matrix(self) -> np.ndarray:
         for i in range(len(self.points)):
-            for j in range(len(self.points)):
-                self.matrix[i, j] = _get_distance(self.points[i], self.points[j]) + .5
+            self.matrix[i, i] = 0
+            for j in range(i + 1, len(self.points)):
+                self.matrix[i, j] = self.matrix[j, i] = _get_distance(self.points[i], self.points[j]) + .5
 
         return self.matrix

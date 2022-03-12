@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# -- project-specific --
+# problem instances data
+/lab01/data/

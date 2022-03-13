@@ -29,7 +29,7 @@ class Solution:
         """ Return lengths of left and right cycles"""
         return [d.sum() for d in self.distances]
 
-    def plot(self, points, show=True):
+    def plot(self, points, title="", show=True):
         """ Create a matplotlib visualization of the solution """
         # points for plotting - add the first point at the end to close the cycle
         left_pts = np.array([points[i] for i in self.left_i] + [points[self.left_i[0]]])
@@ -38,6 +38,8 @@ class Solution:
         fig, ax = plt.subplots()
         ax.plot(left_pts[:, 0], left_pts[:, 1], 'o-', color='red')
         ax.plot(right_pts[:, 0], right_pts[:, 1], 'o-', color='blue')
+
+        ax.set_title(title)
 
         if show:
             plt.show()

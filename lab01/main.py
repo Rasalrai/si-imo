@@ -29,5 +29,5 @@ if __name__ == '__main__':
 
     for start_node in range(10):
         greedy_nn_alg.run(start_node)
-        greedy_nn_alg.solution.plot(problem.points, show=False)
+        greedy_nn_alg.solution.plot(problem.points, show=True)
         print(f"Greedy NN cycles lengths: {greedy_nn_alg.solution.length()}")

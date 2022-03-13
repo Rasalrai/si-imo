@@ -20,3 +20,4 @@ class RandomAlgorithm(Algorithm):
 
         # save the solution
         self.solution = Solution(self.data, nodes_left, nodes_right)
+        return self.solution

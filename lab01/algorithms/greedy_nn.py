@@ -7,7 +7,6 @@ from lab01.solution import Solution
 class GreedyNNAlgorithm(Algorithm):
     def run(self, start1):
         nodes_n = self.data.shape[0]
-        # saving indices of nodes that are a part of a cycle
         visited = np.zeros(nodes_n, dtype=bool)
 
         # get farthest node from start_node
@@ -22,13 +21,13 @@ class GreedyNNAlgorithm(Algorithm):
         cycles = [np.zeros(shape=(nodes_n // 2,), dtype=int) for _ in range(2)]
         cycles[0][0] = start1
         cycles[1][0] = start2
-        cycles_lens = [np.zeros(shape=(nodes_n // 2,), dtype=int) for _ in range(2)]
+        # cycles_lens = [np.zeros(shape=(nodes_n // 2,), dtype=int) for _ in range(2)]
 
         # # find nearest available neighbours - v1
         # for i in range(nodes_n // 2 - 1):
         #     for cycle in cycles:
         #         last = cycle[i]
-        #         best_node, best_dist = -1, self.data.max()
+        #         best_node, best_dist = -1, self.data.max() + 1
         #         for j, d in enumerate(self.data[last]):
         #             if i != j and d < best_dist and not visited[j]:
         #                 best_node, best_dist = j, d
@@ -39,10 +38,10 @@ class GreedyNNAlgorithm(Algorithm):
         # find nearest available neighbours - v2
         #  check with breaking all existing edges
         for i in range(nodes_n // 2 - 1):
-            for cycle, lens in zip(cycles, cycles_lens):
+            for cycle in cycles:
                 last = cycle[i]
                 # get next node to add
-                best_node, best_dist = -1, self.data.max()
+                best_node, best_dist = -1, self.data.max() + 1
                 for j, d in enumerate(self.data[last]):
                     if i != j and d < best_dist and not visited[j]:
                         best_node, best_dist = j, d
@@ -51,19 +50,18 @@ class GreedyNNAlgorithm(Algorithm):
                 visited[best_node] = True
 
                 # check where it's best to add this node
-                curr_len = sum(lens)
-                best_after, best_len = i, curr_len + self.data[last, best_node]
+                curr_length = self.cycle_length(cycle)
+                best_after, best_length = i, curr_length + self.data[last, best_node]
                 # todo check for off-by-one errors
                 for j in range(0, i):
-                    new_len = curr_len - lens[j] + self.data[cycle[j], best_node] + self.data[best_node, cycle[j + 1]]
-                    if new_len < best_len:
-                        best_after, best_len = j, new_len
+                    new_len = curr_length - self.data[cycle[j], cycle[j+1]] + \
+                              self.data[cycle[j], best_node] + \
+                              self.data[best_node, cycle[j + 1]]
+                    if new_len < best_length:
+                        best_after, best_length = j, new_len
 
                 # insert the node and update distances
-                lens = np.insert(lens, best_after, self.data[best_after, best_node])
-                lens[best_after + 1] = self.data[best_node, cycle[best_after + 1]]
                 cycle = np.insert(cycle, best_after + 1, best_node)
-
                 visited[best_node] = True
 
         self.solution = Solution(self.data, *cycles)

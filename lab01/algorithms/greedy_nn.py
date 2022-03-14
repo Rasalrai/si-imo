@@ -51,5 +51,5 @@ class GreedyNNAlgorithm(Algorithm):
                 cycles[ic] = np.insert(cycle, best_after + 1, best_node)
                 visited[best_node] = True
 
-        self.solution = Solution(self.data, *cycles)
+        self.solution = Solution(self.data, cycles[0][:nodes_n // 2], cycles[1][:nodes_n // 2])
         return self.solution

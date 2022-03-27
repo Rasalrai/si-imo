@@ -6,7 +6,7 @@ from lab02.solution import Solution
 
 
 class LocalAlgorithm(ABC):
-    def __init__(self, variant, data_l: np.ndarray, data_r: np.ndarray, data: np.ndarray):
+    def __init__(self, variant: str, data_l: np.ndarray, data_r: np.ndarray, data: np.ndarray):
         self.data = data
         self.data_l = data_l.copy()
         self.data_r = data_r.copy()
@@ -54,25 +54,29 @@ class LocalAlgorithm(ABC):
         return original_cycle - new_cycle
 
     def delta_vert_outside(self, cycle, a, b):
+        before_i, i, after_i = cycle[a - 1], cycle[a], cycle[(a + 1) % cycle.shape[0]]
         if np.array_equiv(cycle, self.data_l):
-            before_i, i, after_i = cycle[a - 1], cycle[a], cycle[(a + 1) % cycle.shape[0]]
             before_j, j, after_j = self.data_r[b - 1], self.data_r[b], self.data_r[(b + 1) % self.data_r.shape[0]]
         else:
-            before_i, i, after_i = cycle[a - 1], cycle[a], cycle[(a + 1) % cycle.shape[0]]
             before_j, j, after_j = self.data_l[b - 1], self.data_l[b], self.data_l[(b + 1) % self.data_l.shape[0]]
 
-        original_cycles = self.data[before_i][i] + self.data[i][after_i] + self.data[before_j][j] + self.data[j][
-            after_j]
-        new_cycles = self.data[before_i][j] + self.data[j][after_i] + self.data[before_j][i] + self.data[i][after_j]
+        original_cycles = self.data[before_i][i] + \
+                          self.data[i][after_i] + \
+                          self.data[before_j][j] + \
+                          self.data[j][after_j]
+        new_cycles = self.data[before_i][j] + \
+                     self.data[j][after_i] + \
+                     self.data[before_j][i] + \
+                     self.data[i][after_j]
 
         return original_cycles - new_cycles
 
     def cycle_length(self, cycle, close=False):
         length = 0
         for i, n in enumerate(cycle[:-1]):
-            length += self.data[n, cycle[i+1]]
+            length += self.data[n, cycle[i + 1]]
         if close:
             length += self.data[cycle[-1], cycle[0]]
         return length
 
-    #def
+    # def

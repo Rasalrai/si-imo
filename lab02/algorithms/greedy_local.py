@@ -9,12 +9,12 @@ from lab02.solution import Solution
 class GreedyLocal(LocalAlgorithm):
     def run(self):
         random.seed()
-        start = time.time()
-        end = time.time()
-        while True or end - start < 60:
+        # start = time.time()
+        # end = time.time()
+        while True:
             order = random.sample(self.moves, 2)
             gain = order[0]()
-            end = time.time()
+            # end = time.time()
             if gain <= 0:
                 gain = order[1]()
                 if gain <= 0:

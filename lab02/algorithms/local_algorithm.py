@@ -11,7 +11,7 @@ class LocalAlgorithm(ABC):
         self.data_l = data_l.copy()
         self.data_r = data_r.copy()
         self.variant = variant
-        self.moves = [self.inside_move]#, self.outside_move]
+        self.moves = [self.inside_move, self.outside_move]
         self.solution = None
         # super().__init__()
 
@@ -40,11 +40,10 @@ class LocalAlgorithm(ABC):
         return possible
 
     def delta_vert_inside(self, cycle, a, b):
-        before_i, i, after_i = cycle[a - 1], cycle[a], cycle[(a + 1) % cycle.shape[0]]
-        before_j, j, after_j = cycle[b - 1], cycle[b], cycle[(b + 1) % cycle.shape[0]]
-
-        original_cycle = self.data[before_i][i] + self.data[i][after_i] + self.data[before_j][j] + self.data[j][after_j]
-        new_cycle = self.data[before_i][j] + self.data[j][after_i] + self.data[before_j][i] + self.data[i][after_j]
+        original_cycle = self.cycle_length(cycle, close=True)
+        new_cycle = cycle.copy()
+        new_cycle[a], new_cycle[b] = new_cycle[b], new_cycle[a]
+        new_cycle = self.cycle_length(new_cycle, close=True)
         return original_cycle - new_cycle
 
     def delta_edge_inside(self, cycle, a, b):

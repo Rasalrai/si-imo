@@ -45,10 +45,10 @@ class RandomLocal(LocalAlgorithm):
                     gain = self.delta_edge_inside(cycle, i, j)
                 else:
                     gain = self.delta_vert_inside(cycle, i, j)
-                if gain > 0 and self.variant == "vertices":
+                if self.variant == "vertices":
                     cycle[i], cycle[j] = cycle[j], cycle[i]
                     return left_cycle, right_cycle
-                elif gain > 0 and self.variant == "edges":
+                elif self.variant == "edges":
                     cycle[i:j+1] = np.flipud(cycle[i:j+1])
                     return left_cycle, right_cycle
         return left_cycle, right_cycle
@@ -62,10 +62,9 @@ class RandomLocal(LocalAlgorithm):
             random.shuffle(possible_change)
             for i, j in possible_change:
                 gain = self.delta_vert_outside(cycle, i, j)
-                if gain > 0:
-                    if np.array_equiv(cycle, left_cycle):
-                        cycle[i], right_cycle[j] = right_cycle[j], cycle[i]
-                    else:
-                        cycle[i], left_cycle[j] = left_cycle[j], cycle[i]
-                    return left_cycle, right_cycle
+                if np.array_equiv(cycle, left_cycle):
+                    cycle[i], right_cycle[j] = right_cycle[j], cycle[i]
+                else:
+                    cycle[i], left_cycle[j] = left_cycle[j], cycle[i]
+                return left_cycle, right_cycle
         return left_cycle, right_cycle

@@ -1,3 +1,5 @@
+from os import path, mkdir
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -28,17 +30,23 @@ class Solution:
         """ Return lengths of left and right cycles"""
         return [d.sum() for d in self.distances]
 
-    def plot(self, points, title="", show=True):
+    def plot(self, points, title="", show=True, save=False):
         """ Create a matplotlib visualization of the solution """
         # points for plotting - add the first point at the end to close the cycle
         left_pts = np.array([points[i] for i in self.left_i] + [points[self.left_i[0]]])
         right_pts = np.array([points[i] for i in self.right_i] + [points[self.right_i[0]]])
 
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(constrained_layout=True)
         ax.plot(left_pts[:, 0], left_pts[:, 1], 'o-', color='red')
         ax.plot(right_pts[:, 0], right_pts[:, 1], 'o-', color='blue')
 
         ax.set_title(title)
+        ax.set_xticks([])
+        ax.set_yticks([])
 
+        if save:
+            if not path.exists("results"):
+                mkdir("results")
+            plt.savefig(path.join("results", title + ".png"))
         if show:
             plt.show()

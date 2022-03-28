@@ -1,7 +1,7 @@
 import numpy as np
 
-from lab01.algorithms.algorithm import Algorithm
-from lab01.solution import Solution
+from lab02.algorithms.algorithm import Algorithm
+from lab02.solution import Solution
 
 
 class GreedyNNAlgorithm(Algorithm):

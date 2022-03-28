@@ -8,7 +8,7 @@ from lab02.solution import Solution
 
 class RandomAlgorithm(Algorithm):
 
-    def run(self):
+    def run(self, *args, **kwargs):
         size = self.data.shape[0]
 
         # split data randomly into two parts

@@ -6,22 +6,17 @@ from time import perf_counter
 from instance_reader import InstanceReader
 from lab02.algorithms.greedy_nn import GreedyNNAlgorithm
 from lab02.algorithms.random import RandomAlgorithm
+from lab02.algorithms.random_local import RandomLocal
 from lab02.algorithms.greedy_local import GreedyLocal
 from lab02.algorithms.steepest_local import SteepestLocal
 
-
 if __name__ == '__main__':
-    t1 = perf_counter()
+    t0 = perf_counter()
     for problem_file in ("kroA100.tsp", "kroB100.tsp"):
         print(f"\n\n--- {problem_file} ---")
         problem = InstanceReader(os.path.join("data", problem_file))
         nodes = problem.matrix
 
-        # # random algorithm
-        # random_alg = RandomAlgorithm(nodes)
-        base_algorithm = GreedyNNAlgorithm(nodes)
-        # TODO adjust main function for testing
-        # TODO add random local search for benchmark
         results = []
         best_result, best_solution = np.inf, None
 
@@ -30,43 +25,50 @@ if __name__ == '__main__':
             "GreedyVert": (GreedyLocal, {"variant": "vertices", "data": nodes}),
             "SteepestEdges": (SteepestLocal, {"variant": "edges", "data": nodes}),
             "SteepestVert": (SteepestLocal, {"variant": "vertices", "data": nodes}),
+            "RandomEdges": (RandomLocal, {"variant": "edges", "data": nodes}),
+            "RandomVert": (RandomLocal, {"variant": "vertices", "data": nodes}),
         }
-        res = {k: [] for k in algorithms.keys()}
-        best_result_greedy = {k: np.inf for k in algorithms.keys()}
-        best_solution_greedy = {k: None for k in algorithms.keys()}
 
-        # to adjust no. of iterations on Windows - change the second value :)
-        for j in range(100 if os.name == "posix" else 2):
-            # print("=====", j, "=====")
-            if not j % 10: print(".", end="")
-            base_algorithm.run(j)
-            results.append(l := sum(base_algorithm.solution.length()))
+        base_greedy_algorithm = GreedyNNAlgorithm(nodes)
+        random_base = RandomAlgorithm(nodes)
 
-            if l < best_result:
-                best_result, best_solution = l, base_algorithm.solution
-            for k, v in algorithms.items():
-                alg = v[0](**v[1],
-                           data_l=base_algorithm.solution.left_i,
-                           data_r=base_algorithm.solution.right_i)
-                alg.run()
-                l = sum(alg.solution.length())
-                res[k].append(l)
-                if l < best_result_greedy[k]:
-                    best_result_greedy[k], best_solution_greedy[k] = l, alg.solution
-        best_solution.plot(problem.points, f"Base solution: best result for {problem_file}", show=True)
+        for base_alg, base_str in zip((base_greedy_algorithm, random_base), ("from heur", "from random")):
+            res = {k: [] for k in algorithms.keys()}  # all results
+            times = {k: [] for k in algorithms.keys()}  # all times
+            best_results = {k: np.inf for k in algorithms.keys()}
+            best_solutions = {k: None for k in algorithms.keys()}
 
-        for k, v in best_solution_greedy.items():
-            v.plot(problem.points, f"{k}: best result for {problem_file}", show=True, save=True)
-        print()
+            if base_str == "from heur":
+                iter, time_limit = 50, 1.8
+            else:
+                iter, time_limit = 20, 9
 
-        print(f"algorithm: base\n"
-              f"\tbest: {min(results)}\n"
-              f"\tworst: {max(results)}\n"
-              f"\tavg: {sum(results) / len(results)}")
+            for i in range(iter):
+                base_alg.run(2*i+1)
 
-        for k, v in res.items():
-            print(f"algorithm: {k}\n"
-                  f"\tbest: {min(v)}\n"
-                  f"\tworst: {max(v)}\n"
-                  f"\tavg: {sum(v) / len(v)}")
-    print(f"\nTIME: {perf_counter() - t1}")
+                for k, v in algorithms.items():
+                    alg = v[0](**v[1],
+                               data_l=base_alg.solution.left_i,
+                               data_r=base_alg.solution.right_i)
+                    alg.set_time_limit(time_limit)
+                    t1 = perf_counter()
+                    alg.run()
+                    times[k].append(perf_counter() - t1)
+                    res[k].append(l := sum(alg.solution.length()))
+                    if l < best_results[k]:
+                        best_results[k], best_solutions[k] = l, alg.solution
+
+                # get results
+            print(f"\n\n{base_str.upper()}")
+            for k, v in best_solutions.items():
+                v.plot(problem.points, f"{k} - {problem_file} ({base_str})", show=False, save=True)
+
+            print("RESULTS\nalgorithm\tbest\tworst\tavg")
+            for k, v in res.items():
+                print(f"{k}\t{min(v)}\t{max(v)}\t{sum(v) / len(v)}")
+
+            print("TIME\nalgorithm\tbest\tworst\tavg")
+            for k, v in times.items():
+                print(f"{k}\t{min(v):.5f}\t{max(v):.5f}\t{(sum(v) / len(v)):.5f}")
+
+    print(f"\nTIME: {perf_counter() - t0}")

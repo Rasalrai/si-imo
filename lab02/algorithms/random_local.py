@@ -7,21 +7,28 @@ from lab02.solution import Solution
 
 
 class RandomLocal(LocalAlgorithm):
+    time_limit = 3
+
+    def set_time_limit(self, time_limit):
+        self.time_limit = time_limit
+
     def run(self):
         random.seed()
         start = time.time()
         # end = time.time()
-        length = self.cycle_length(self.data_l) + self.cycle_length(self.data_r)
-        while True and time.time() - start < 3:
-            order = random.choice(self.moves)
-            left_cycle, right_cycle = order()
-            # end = time.time()
-            gain = self.cycle_length(left_cycle) + self.cycle_length(right_cycle)
-            if gain < length:
-                length = gain
-                self.data_l = left_cycle.copy()
-                self.data_r = right_cycle.copy()
-        self.solution = Solution(self.data, self.data_l, self.data_r)
+        best_length = self.cycle_length(self.data_l) + self.cycle_length(self.data_r)
+        best_l, best_r = self.data_l, self.data_r
+
+        while time.time() - start < self.time_limit:
+            move = random.choice(self.moves)
+            self.data_l, self.data_r = move()
+
+            new_len = self.cycle_length(self.data_l) + self.cycle_length(self.data_r)
+            if new_len < best_length:
+                best_length = new_len
+                best_l, best_r = self.data_l.copy(), self.data_r.copy()
+
+        self.solution = Solution(self.data, best_l, best_r)
         return self.solution
 
     def inside_move(self):
@@ -32,7 +39,7 @@ class RandomLocal(LocalAlgorithm):
             possible_change = self.find_possible(cycle, "inside")
             random.shuffle(possible_change)
             self.variant = "edges" if random.randint(0, 1) == 0 else "vertices"
-            print(self.variant)
+            # print(self.variant)
             for i, j in possible_change:
                 if self.variant == "edges":
                     gain = self.delta_edge_inside(cycle, i, j)

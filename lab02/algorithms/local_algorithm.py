@@ -27,6 +27,9 @@ class LocalAlgorithm(ABC):
     def outside_move(self):
         raise NotImplementedError("Subclass must implement abstract method")
 
+    def set_time_limit(self, time_limit):
+        pass
+
     def find_possible(self, cycle, direction):
         possible = []
         if direction == "inside":
@@ -78,5 +81,3 @@ class LocalAlgorithm(ABC):
         if close:
             length += self.data[cycle[-1], cycle[0]]
         return length
-
-    # def

@@ -1,12 +1,15 @@
 import numpy as np
+import random
 
 from lab01.algorithms.algorithm import Algorithm
 from lab01.solution import Solution
 
 
 class RegretAlgorithm(Algorithm):
-    def run(self, start1):
+    def run(self, start1=None):
         nodes_n = self.data.shape[0]
+        if start1 is None:
+            start1 = random.randint(0, self.data.shape[0])
         visited = np.zeros(nodes_n, dtype=bool)
 
         # get farthest node from start_node

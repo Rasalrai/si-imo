@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 
 from lab01.algorithms.algorithm import Algorithm
@@ -5,7 +7,9 @@ from lab01.solution import Solution
 
 
 class GreedyNNAlgorithm(Algorithm):
-    def run(self, start1):
+    def run(self, start1=None):
+        if start1 is None:
+            start1 = random.randint(0, self.data.shape[0])
         nodes_n = self.data.shape[0]
         visited = np.zeros(nodes_n, dtype=bool)
 

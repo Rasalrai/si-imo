@@ -131,4 +131,5 @@ dmypy.json
 # -- project-specific --
 /.idea/
 # problem instances data
-/lab01/data/
+/*/data/
+*/results/

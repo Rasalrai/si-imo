@@ -6,10 +6,10 @@ from lab02.solution import Solution
 
 
 class LocalAlgorithm(ABC):
-    def __init__(self, variant: str, left: np.ndarray, right: np.ndarray, data: np.ndarray):
+    def __init__(self, variant: str, data_l: np.ndarray, data_r: np.ndarray, data: np.ndarray):
         self.data = data
-        self.data_l = left.copy()
-        self.data_r = right.copy()
+        self.data_l = None
+        self.data_r = None
         self.variant = variant
         self.moves = [self.inside_move, self.outside_move]
         self.solution = None

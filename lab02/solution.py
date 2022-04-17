@@ -1,3 +1,4 @@
+from copy import deepcopy
 from os import path, mkdir
 
 import numpy as np
@@ -8,8 +9,8 @@ class Solution:
     def __init__(self, matrix, l, r):
         self.matrix = matrix
         # indices of subsequent nodes in left and right cycles
-        self.left_i = l
-        self.right_i = r
+        self.left_i = deepcopy(l)
+        self.right_i = deepcopy(r)
 
         self.distances = self.get_nodes_distances()
 

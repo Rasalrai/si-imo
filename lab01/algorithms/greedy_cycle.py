@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 
 from lab01.algorithms.algorithm import Algorithm
@@ -5,8 +7,10 @@ from lab01.solution import Solution
 
 
 class GreedyCycleAlgorithm(Algorithm):
-    def run(self, start1):
+    def run(self, start1=None):
         nodes_n = self.data.shape[0]
+        if start1 is None:
+            start1 = random.randint(0, nodes_n)
         visited = np.zeros(nodes_n, dtype=bool)
 
         # get farthest node from start_node

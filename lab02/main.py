@@ -10,6 +10,7 @@ from lab02.algorithms.random_local import RandomLocal
 from lab02.algorithms.greedy_local import GreedyLocal
 from lab02.algorithms.steepest_local import SteepestLocal
 
+
 if __name__ == '__main__':
     t0 = perf_counter()
     for problem_file in ("kroA100.tsp", "kroB100.tsp"):

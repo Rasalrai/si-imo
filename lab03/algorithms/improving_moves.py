@@ -1,3 +1,4 @@
+from copy import deepcopy
 from time import perf_counter
 
 import numpy as np
@@ -13,8 +14,6 @@ class ImprovingMovesAlgorithm(Algorithm):
         super().__init__(data)
         self.moves: [Move] = []
         self.old_moves = []
-        # self.left = []
-        # self.right = []
         self.left = left
         self.right = right
 
@@ -26,17 +25,22 @@ class ImprovingMovesAlgorithm(Algorithm):
         # get all improving moves
         self.find_all_moves()
         time1 = perf_counter()
-        # s_old = sum(Solution(self.data, self.left, self.right).length())
+        s_old = sum(Solution(self.data, self.left, self.right).length())
+        self.cycles_old = [deepcopy(self.left), deepcopy(self.right)]
 
         while self.moves and perf_counter() - time1 < self.time_limit:
             # print("*", end="")
             if self.execute_best_move() == -1:  # no more improving moves
                 break
-            # else:
-            #     s = sum(Solution(self.data, self.left, self.right).length())
-            #     if s > s_old:
-            #         print(f" !!! {s} > {s_old}")
-            #     s_old = s
+            else:
+                s = sum(Solution(self.data, self.left, self.right).length())
+                if s > s_old:
+                    print(f" ! {s} > {s_old} [rolling back]")
+                    self.find_all_moves()
+                    self.left, self.right = self.cycles_old
+                else:
+                    print("*", end="")
+                s_old = s
 
         self.solution = Solution(self.data, self.left, self.right)
         # print(f"=== result: {sum(self.solution.length())}")
@@ -71,10 +75,13 @@ class ImprovingMovesAlgorithm(Algorithm):
 
         return cycle, pos
 
-    def _get_move_delta(self, move: 'Move'):
+    def _get_move_delta(self, move: 'Move', verbose=False):
         cycles = [self.left, self.right]
 
         if move.type.lower() == 'e':
+            if verbose:
+                pass
+
             (a, b), (c, d) = move.nodes
 
             cycle_a, pos_a = self._get_node_info(a)
@@ -85,30 +92,53 @@ class ImprovingMovesAlgorithm(Algorithm):
             if cycle_a != cycle_b or cycle_c != cycle_d:
                 return None
 
+            # if pos_a > pos_b:
+            #     a, b = b, a
+            #     pos_a, pos_b = pos_b, pos_a
+            # # if pos_c > pos_d:
+            #     c, d = d, c
+            #     pos_c, pos_d = pos_d, pos_c
+
+            # prev_a = min(pos_a, pos_b) - 1
+            # prev_c = min(pos_c, pos_d) - 1
+            # next_a = (max(pos_a, pos_b) + 1) % len(cycles[cycle_a])
+            # next_c = (max(pos_c, pos_d) + 1) % len(cycles[cycle_c])
             if pos_a > pos_b:
-                pos_a, pos_b = pos_b, pos_a
+                a_n, b_n = cycles[cycle_a][(pos_a+1) % len(cycles[cycle_a])], cycles[cycle_a][pos_b - 1]
+            else:
+                a_n, b_n = cycles[cycle_a][pos_a - 1], cycles[cycle_a][(pos_b+1) % len(cycles[cycle_a])]
             if pos_c > pos_d:
-                pos_c, pos_d = pos_d, pos_c
+                c_n, d_n = cycles[cycle_c][(pos_c+1) % len(cycles[cycle_c])], cycles[cycle_c][pos_d - 1]
+            else:
+                c_n, d_n = cycles[cycle_c][pos_c - 1], cycles[cycle_c][(pos_d+1) % len(cycles[cycle_c])]
 
             if pos_b - 1 != pos_a or pos_d - 1 != pos_c:
                 return None
 
-            # if cycle_a == cycle_c:
-            #     # outside
-            pre_ab = self.data[cycles[cycle_a][pos_a - 1], a] + \
-                     self.data[b, cycles[cycle_a][(pos_b + 1) % len(cycles[cycle_a])]]
-            pre_cd = self.data[cycles[cycle_c][pos_c - 1], c] + \
-                     self.data[d, cycles[cycle_c][(pos_d + 1) % len(cycles[cycle_c])]]
+            if verbose:
+                print(f"a: {a} @ {cycle_a}, {pos_a}\tb: {b} @ {cycle_b} {pos_b}")
+                print(f"{a_n} <- a, b -> {b_n}")
+                print(f"c: {c} @ {cycle_c}, {pos_c}\td: {d} @ {cycle_d}, {pos_d}")
+                print(f"{c_n} <- c, d -> {d_n}")
 
-            post_ab = self.data[cycles[cycle_a][pos_a - 1], b] + \
-                      self.data[a, cycles[cycle_a][(pos_b + 1) % len(cycles[cycle_a])]]
-            post_cd = self.data[cycles[cycle_c][pos_c - 1], d] + \
-                      self.data[c, cycles[cycle_c][(pos_d + 1) % len(cycles[cycle_c])]]
+            pre_ab = self.data[a_n, a] + \
+                     self.data[b, b_n]
+            pre_cd = self.data[c_n, c] + \
+                     self.data[d, d_n]
+
+            post_ab = self.data[a_n, b] + \
+                      self.data[a, b_n]
+            post_cd = self.data[c_n, d] + \
+                      self.data[c, d_n]
+
+            if verbose:
+                print(f"pre_ab: {self.data[a_n, a]} + {self.data[b, b_n]} = {pre_ab}")
+                print(f"pre_cd: {self.data[c_n, c]} + {self.data[d, d_n]} = {pre_cd}")
+                print(f"post_ab: {self.data[a_n, b]} + {self.data[a, b_n]} = {post_ab}")
+                print(f"post_cd: {self.data[c_n, d]} + {self.data[c, d_n]} = {post_cd}")
+                print(f"diff = {post_ab + post_cd - pre_ab - pre_cd}")
 
             return post_ab + post_cd - pre_ab - pre_cd
-            # else:
-            #     # inside
-            #     pass
 
         elif move.type.lower() == 'v':
             a, b = move.nodes
@@ -116,17 +146,48 @@ class ImprovingMovesAlgorithm(Algorithm):
             cycle_a, pos_a = self._get_node_info(a)
             cycle_b, pos_b = self._get_node_info(b)
 
-            a_pre = self.data[cycles[cycle_a][pos_a - 1], a] + \
-                    self.data[cycles[cycle_a][(pos_a + 1) % len(cycles[cycle_a])], a]
-            b_pre = self.data[cycles[cycle_b][pos_b - 1], b] + \
-                    self.data[cycles[cycle_b][(pos_b + 1) % len(cycles[cycle_b])], b]
+            if verbose:
+                print(f"a: {a} @ {cycle_a}, {pos_a}\tb: {b} @ {cycle_b}, {pos_b}")
+                print(f"{cycles[cycle_a][pos_a - 1]} <- a -> {cycles[cycle_a][(pos_a + 1) % len(cycles[cycle_a])]}")
+                print(f"{cycles[cycle_b][pos_b - 1]} <- b -> {cycles[cycle_b][(pos_b + 1) % len(cycles[cycle_b])]}")
 
-            a_post = self.data[cycles[cycle_a][pos_a - 1], b] + \
-                     self.data[cycles[cycle_a][(pos_a + 1) % len(cycles[cycle_a])], b]
-            b_post = self.data[cycles[cycle_b][pos_b - 1], a] + \
-                     self.data[cycles[cycle_b][(pos_b + 1) % len(cycles[cycle_b])], a]
+            if cycle_a != cycle_b or not (-1 <= pos_a - pos_b <= 1):
+                # print("+", end="")
+                a_pre = self.data[cycles[cycle_a][pos_a - 1], a] + \
+                        self.data[cycles[cycle_a][(pos_a + 1) % len(cycles[cycle_a])], a]
+                b_pre = self.data[cycles[cycle_b][pos_b - 1], b] + \
+                        self.data[cycles[cycle_b][(pos_b + 1) % len(cycles[cycle_b])], b]
+
+                a_post = self.data[cycles[cycle_a][pos_a - 1], b] + \
+                         self.data[cycles[cycle_a][(pos_a + 1) % len(cycles[cycle_a])], b]
+                b_post = self.data[cycles[cycle_b][pos_b - 1], a] + \
+                         self.data[cycles[cycle_b][(pos_b + 1) % len(cycles[cycle_b])], a]
+
+                if verbose:
+                    print("non-adjacent")
+                    print(f"a_pre: {self.data[cycles[cycle_a][pos_a - 1], a]} + {self.data[cycles[cycle_a][(pos_a + 1) % len(cycles[cycle_a])], a]} = {a_pre}")
+                    print(f"b_pre: {self.data[cycles[cycle_b][pos_b - 1], b]} + {self.data[cycles[cycle_b][(pos_b + 1) % len(cycles[cycle_b])], b]} = {b_pre}")
+                    print(f"a_post: {self.data[cycles[cycle_a][pos_a - 1], b]} + {self.data[cycles[cycle_a][(pos_a + 1) % len(cycles[cycle_a])], b]} = {a_post}")
+                    print(f"b_post: {self.data[cycles[cycle_b][pos_b - 1], a]} + {self.data[cycles[cycle_b][(pos_b + 1) % len(cycles[cycle_b])], a]} = {b_post}")
+
+            else:   # a and b are next to each other
+                # print("-", end="")
+                if pos_a > pos_b:
+                    a, b = b, a
+                    pos_a, pos_b = pos_b, pos_a
+                a_pre = self.data[cycles[cycle_a][pos_a - 1], a]
+                b_pre = self.data[cycles[cycle_b][(pos_b + 1) % len(cycles[cycle_b])], b]
+                a_post = self.data[cycles[cycle_a][pos_a - 1], b]
+                b_post = self.data[cycles[cycle_b][(pos_b + 1) % len(cycles[cycle_b])], a]
+
+                if verbose:
+                    print("adjacent")
+                    print(f"a_pre: {a_pre}\tb_pre: {b_pre}\tsum: {a_pre + b_pre}")
+                    print(f"a_post: {a_post}\tb_post: {b_post}\tsum: {a_post + b_post}")
 
             delta = a_post + b_post - a_pre - b_pre
+            if verbose:
+                print(f"delta: {delta}")
             return delta
 
         else:
@@ -149,17 +210,19 @@ class ImprovingMovesAlgorithm(Algorithm):
     def execute_best_move(self):
         # remove invalid moves
         self.moves = [m for m in self.moves if m.delta is not None]
-        self._sort_moves()
+        self._sort_moves(calculate_delta=True)
 
         while len(self.moves) and self.moves[0].delta < 0:
             best_move = self.moves.pop(0)
-            if (d := self._get_move_delta(best_move)) < 0:  # check again
+            if (d := self._get_move_delta(best_move, verbose=False)) < 0:  # check again
                 # if d != best_move.delta:
                 #     print(f"unexpected delta: {d} != (expected) {best_move.delta}")
                 # print(f"E: {best_move.nodes}; d={d}")
+                # print(f"\nE: {best_move.nodes}; d={d}")
                 self._execute_move(best_move)
                 return 0
             # else:
+            #     print("% ", end="")
             #     print(f'Invalid move: {best_move.nodes}; expected delta: {best_move.delta}, actual: {d}')
         return -1
 
@@ -167,6 +230,7 @@ class ImprovingMovesAlgorithm(Algorithm):
         cycles = [self.left, self.right]
 
         if move.type.lower() == 'e':
+            # print('e', end="")
             (a, b), (c, d) = move.nodes
 
             cycle_a, pos_a = self._get_node_info(a)
@@ -177,41 +241,66 @@ class ImprovingMovesAlgorithm(Algorithm):
             if cycle_a != cycle_b or cycle_c != cycle_d:
                 return None
 
-            if pos_a > pos_b:
-                pos_a, pos_b = pos_b, pos_a
-            if pos_c > pos_d:
-                pos_c, pos_d = pos_d, pos_c
+            # if pos_a > pos_b:
+            #     a, b = b, a
+            #     pos_a, pos_b = pos_b, pos_a
+            # # if pos_c > pos_d:
+            #     c, d = d, c
+            #     pos_c, pos_d = pos_d, pos_c
 
             if cycle_a == cycle_c:
                 if pos_a > pos_c:
+                    a, b, c, d = c, d, a, b
                     pos_a, pos_b, pos_c, pos_d = pos_c, pos_d, pos_a, pos_b
 
-                if pos_d == len(cycles[cycle_a]) - 1:
+                if pos_a > pos_b:
+                    a_n, b_n = cycles[cycle_a][(pos_a + 1) % len(cycles[cycle_a])], cycles[cycle_a][pos_b - 1]
+                else:
+                    a_n, b_n = cycles[cycle_a][pos_a - 1], cycles[cycle_a][(pos_b + 1) % len(cycles[cycle_a])]
+                if pos_c > pos_d:
+                    c_n, d_n = cycles[cycle_c][(pos_c + 1) % len(cycles[cycle_c])], cycles[cycle_c][pos_d - 1]
+                else:
+                    c_n, d_n = cycles[cycle_c][pos_c - 1], cycles[cycle_c][(pos_d + 1) % len(cycles[cycle_c])]
+
+                next = max(pos_c, pos_d) + 1
+                if next == len(cycles[cycle_a]):
                     cycles[cycle_a][pos_a:] = np.flipud(cycles[cycle_a][pos_a:])
                 else:
-                    cycles[cycle_a][pos_a:pos_d+1] = np.flipud(cycles[cycle_a][pos_a:pos_d+1])
+                    cycles[cycle_a][pos_a:next] = np.flipud(cycles[cycle_a][pos_a:next])
 
             else:
+                # prev_a = min(pos_a, pos_b) - 1
+                # prev_c = min(pos_c, pos_d) - 1
+                # next_a = (max(pos_a, pos_b) + 1) % len(cycles[cycle_a])
+                # next_c = (max(pos_c, pos_d) + 1) % len(cycles[cycle_c])
+
+                if pos_a > pos_b:
+                    a_n, b_n = cycles[cycle_a][(pos_a + 1) % len(cycles[cycle_a])], cycles[cycle_a][pos_b - 1]
+                else:
+                    a_n, b_n = cycles[cycle_a][pos_a - 1], cycles[cycle_a][(pos_b + 1) % len(cycles[cycle_a])]
+                if pos_c > pos_d:
+                    c_n, d_n = cycles[cycle_c][(pos_c + 1) % len(cycles[cycle_c])], cycles[cycle_c][pos_d - 1]
+                else:
+                    c_n, d_n = cycles[cycle_c][pos_c - 1], cycles[cycle_c][(pos_d + 1) % len(cycles[cycle_c])]
+
                 cycles[cycle_a][pos_a], cycles[cycle_a][pos_b], cycles[cycle_c][pos_c], cycles[cycle_c][pos_d] = \
                     c, d, a, b
                 self._add_moves_with_edge(cycles[cycle_a][pos_b],
-                                          cycles[cycle_a][(pos_b + 1) % len(cycles[cycle_a])])
-                self._add_moves_with_edge(cycles[cycle_c][pos_c - 1],
+                                          b_n)
+                self._add_moves_with_edge(c_n,
                                           cycles[cycle_c][pos_c])
 
             # add new possible moves to the list
-            self._add_moves_with_edge(cycles[cycle_a][pos_a - 1],
+            self._add_moves_with_edge(a_n,
                                       cycles[cycle_a][pos_a])
             self._add_moves_with_edge(cycles[cycle_c][pos_d],
-                                      cycles[cycle_c][(pos_d + 1) % len(cycles[cycle_c])])
+                                      d_n)
 
             self._update_deltas_from_nodes([a, b, c, d,
-                                            cycles[cycle_a][pos_a - 1],
-                                            cycles[cycle_a][(pos_b + 1) % len(cycles[cycle_a])],
-                                            cycles[cycle_c][pos_c - 1],
-                                            cycles[cycle_c][(pos_d + 1) % len(cycles[cycle_c])]])
+                                            a_n, b_n, c_n, d_n])
 
         elif move.type.lower() == 'v':
+            # print('v', end="")
             a, b = move.nodes
 
             cycle_a, pos_a = self._get_node_info(a)
@@ -255,12 +344,12 @@ class ImprovingMovesAlgorithm(Algorithm):
                         break
             else:
                 for node in nodes:
-                # if type(move.nodes[0]) == int and (move.nodes[0] == node or move.nodes[1] == node):
-                #     self.moves[im].delta = self._get_move_delta(move)
-                #     break
+                    # if type(move.nodes[0]) == int and (move.nodes[0] == node or move.nodes[1] == node):
+                    #     self.moves[im].delta = self._get_move_delta(move)
+                    #     break
 
                     if move.nodes[0][0] == node or move.nodes[0][1] == node \
-                             or move.nodes[1][0] == node or move.nodes[1][1] == node:
+                            or move.nodes[1][0] == node or move.nodes[1][1] == node:
                         # if move.nodes[0] == node or move.nodes[1] == node \
                         #         or move.nodes[0][0] == node or move.nodes[0][1] == node \
                         #         or move.nodes[1][0] == node or move.nodes[1][1] == node:

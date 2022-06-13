@@ -1,8 +1,8 @@
 from copy import deepcopy
 from os import path, mkdir
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Solution:
@@ -16,8 +16,8 @@ class Solution:
 
     def get_nodes_distances(self):
         size = self.matrix.shape[0]
-        left = np.ndarray(shape=(size // 2), dtype=np.int)
-        right = np.empty_like(left)
+        left = np.empty(len(self.left_i), dtype=int)
+        right = np.empty(len(self.right_i), dtype=int)
         for distances, nodes in zip((left, right), (self.left_i, self.right_i)):
             for i, n in enumerate(nodes):
                 if i == 0:

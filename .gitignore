@@ -133,3 +133,4 @@ dmypy.json
 # problem instances data
 /*/data/
 */results/
+*/results-old

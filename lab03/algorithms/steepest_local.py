@@ -1,7 +1,7 @@
 import numpy as np
 
 from lab02.algorithms.local_algorithm import LocalAlgorithm
-from lab01.solution import Solution
+from lab02.solution import Solution
 
 
 class SteepestLocal(LocalAlgorithm):
